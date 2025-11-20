@@ -3,66 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hermann Park Bingo</title>
+    <title>Photo Bingo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; touch-action: manipulation; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         
         .prompt-text {
             text-shadow: 0 1px 3px rgba(0,0,0,0.9);
         }
         
         .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #ffffff;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* Hide scrollbar for clean UI */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        /* Smooth fade for modal */
+        .fade-enter { opacity: 0; transform: scale(0.95); }
+        .fade-enter-active { opacity: 1; transform: scale(1); transition: opacity 200ms, transform 200ms; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center overflow-x-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center overflow-x-hidden selection:bg-green-500 selection:text-white">
 
     <!-- Header with location selector -->
-    <header class="w-full text-center py-3 bg-slate-800 shadow-md z-10 sticky top-0">
-        <h1 id="app-title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 inline-block">
+    <header class="w-full text-center py-4 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30">
+        <h1 class="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 inline-block">
             Photo Bingo
         </h1>
-        <div class="mt-1 flex items-center justify-center gap-2 text-[11px]">
-            <span class="text-gray-300 uppercase tracking-wide font-semibold">Location:</span>
-            <select id="location-select" class="bg-slate-900/70 border border-slate-600 text-xs text-gray-100 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-green-400">
-                <option value="hermann">Hermann Park (Houston)</option>
-                <option value="venice">Venice Beach (LA)</option>
-                <option value="panpacific">Pan-Pacific Park (LA)</option>
-            </select>
+        
+        <div class="mt-2 flex items-center justify-center gap-2">
+            <div class="relative group">
+                <select id="location-select" class="appearance-none bg-slate-800 text-sm text-slate-200 font-medium rounded-full pl-4 pr-8 py-1.5 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all cursor-pointer hover:bg-slate-750">
+                    <option value="hermann">Hermann Park (Houston)</option>
+                    <option value="venice">Venice Beach (LA)</option>
+                    <option value="panpacific">Pan-Pacific Park (LA)</option>
+                </select>
+                <!-- Custom Chevron -->
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+            </div>
         </div>
-        <div id="location-label" class="text-[11px] text-green-300 mt-0.5 font-semibold tracking-wide uppercase">
-            Hermann Park (Houston)
-        </div>
-        <div id="status-indicator" class="text-[10px] text-gray-400 mt-1 h-4">Loading saved game...</div>
+        <div id="status-indicator" class="text-[10px] font-medium text-slate-500 mt-1.5 h-3 uppercase tracking-wider opacity-0 transition-opacity duration-300">Ready</div>
     </header>
 
     <!-- Main Content -->
-    <div class="w-full max-w-md flex-grow flex flex-col p-2 gap-3 justify-center">
+    <div class="w-full max-w-md flex-grow flex flex-col p-4 gap-4 justify-start items-center">
         
         <!-- The Board -->
-        <div id="game-board" class="grid grid-cols-5 gap-1 w-full aspect-square bg-slate-800 p-1 rounded-xl shadow-2xl border border-slate-700">
+        <div id="game-board" class="grid grid-cols-5 gap-1.5 w-full aspect-square bg-slate-900 p-2 rounded-2xl shadow-2xl shadow-black/50 border border-slate-800">
             <!-- Squares generated by JS -->
         </div>
 
-        <!-- Action Bar -->
-        <div class="grid grid-cols-2 gap-3 mt-2">
-            <button onclick="resetBoard()" class="bg-red-500/10 border border-red-500/50 text-red-400 active:bg-red-600 active:text-white py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
-                <span>Reset</span>
+        <!-- Modern Action Bar -->
+        <div class="w-full grid grid-cols-2 gap-4 mt-2">
+            <!-- Reset Button -->
+            <button onclick="resetBoard()" class="group relative overflow-hidden rounded-full bg-slate-800 border border-slate-700 text-slate-300 py-3.5 font-semibold text-sm transition-all active:scale-95 hover:bg-slate-750 hover:text-white hover:border-slate-600 shadow-lg">
+                <div class="flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-70 group-hover:opacity-100 transition-opacity"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    <span>Reset Board</span>
+                </div>
             </button>
-            <button onclick="exportGrid()" id="export-btn" class="bg-blue-600 text-white active:bg-blue-700 py-3 rounded-xl font-bold text-sm shadow-lg transition-colors flex items-center justify-center gap-2">
-                <span>Save Image</span>
+
+            <!-- Save Button -->
+            <button onclick="exportGrid()" id="export-btn" class="group relative overflow-hidden rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white py-3.5 font-bold text-sm shadow-lg shadow-emerald-900/20 transition-all active:scale-95 hover:shadow-emerald-500/25 hover:brightness-110">
+                <div class="flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    <span>Save Image</span>
+                </div>
             </button>
         </div>
     </div>
@@ -71,32 +88,45 @@
     <input type="file" id="global-file-input" accept="image/*" capture="environment" class="hidden">
 
     <!-- Edit Modal -->
-    <div id="edit-modal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-6 backdrop-blur-sm animate-fade-in">
-        <div class="bg-slate-800 rounded-2xl p-5 w-full max-w-xs border border-slate-700 shadow-2xl flex flex-col gap-3">
-            <h3 class="text-lg font-bold text-center mb-2 text-white">Edit Square</h3>
-            <button id="btn-change" class="bg-blue-600 text-white py-3 rounded-xl font-semibold active:bg-blue-500">
-                Retake / Upload
+    <div id="edit-modal" class="fixed inset-0 bg-slate-950/80 hidden items-center justify-center z-50 p-6 backdrop-blur-sm transition-all duration-200 opacity-0 scale-95">
+        <div class="bg-slate-900 rounded-3xl p-6 w-full max-w-xs border border-slate-800 shadow-2xl flex flex-col gap-3 relative overflow-hidden">
+            <!-- Decorative gloss -->
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500"></div>
+            
+            <h3 class="text-xl font-bold text-center mb-2 text-white">Edit Square</h3>
+            
+            <button id="btn-change" class="bg-slate-800 text-emerald-400 border border-slate-700 hover:bg-slate-750 hover:border-emerald-500/50 py-3.5 rounded-xl font-semibold active:scale-98 transition-all flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Retake Photo
             </button>
-            <button id="btn-delete" class="bg-red-600 text-white py-3 rounded-xl font-semibold active:bg-red-500">
-                Clear Photo
+            
+            <button id="btn-delete" class="bg-slate-800 text-red-400 border border-slate-700 hover:bg-red-900/20 hover:border-red-500/30 py-3.5 rounded-xl font-semibold active:scale-98 transition-all flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                Clear Square
             </button>
-            <button onclick="closeModal()" class="bg-slate-700 text-slate-300 py-3 rounded-xl font-semibold active:bg-slate-600 mt-2">
+            
+            <button onclick="closeModal()" class="mt-2 text-slate-500 font-medium text-sm hover:text-slate-300 py-2 transition-colors">
                 Cancel
             </button>
         </div>
     </div>
 
-    <!-- Hidden Export Container -->
+    <!-- Hidden Export Template (High Resolution) -->
     <div style="position: absolute; left: -9999px; top: 0;">
-        <div id="export-container" class="bg-white p-6 w-[1200px]">
-            <div class="mb-4 text-center border-b-4 border-green-500 pb-4">
-                <h1 id="export-location-name" class="text-5xl font-black text-slate-800 tracking-tighter uppercase">Hermann Park</h1>
-                <p class="text-slate-500 text-xl font-bold mt-2 tracking-widest uppercase">
-                    Scavenger Hunt • <span id="export-date"></span>
-                </p>
+        <div id="export-container" class="bg-white p-12 w-[1200px] font-sans">
+            <div class="mb-8 text-center border-b-8 border-slate-900 pb-8">
+                <h1 id="export-location-name" class="text-6xl font-black text-slate-900 tracking-tighter uppercase mb-2">Hermann Park</h1>
+                <div class="flex items-center justify-center gap-4 text-slate-500 text-2xl font-bold tracking-widest uppercase">
+                    <span class="bg-slate-900 text-white px-3 py-1 rounded-md">BINGO</span>
+                    <span>•</span>
+                    <span id="export-date"></span>
+                </div>
             </div>
-            <div id="export-grid" class="grid grid-cols-5 gap-2 bg-slate-100 p-2 border-4 border-slate-800">
-                <!-- Export content -->
+            <div id="export-grid" class="grid grid-cols-5 gap-4 bg-slate-100 p-4 border-8 border-slate-900 rounded-xl">
+                <!-- Export content populates here -->
+            </div>
+            <div class="mt-6 text-center">
+                 <p class="text-slate-400 font-semibold text-lg">Created with Photo Bingo</p>
             </div>
         </div>
     </div>
@@ -106,139 +136,56 @@
         const DB_NAME = 'HermannBingoDB';
         const DB_VERSION = 1;
         const STORE_NAME = 'photos';
-
         const CENTER_INDEX = 12;
         const PROMPT_STORAGE_BASE_KEY = 'hermann-bingo-prompts-v2';
 
-        // Location-specific prompt pools and center tiles
+        // Location Configuration
         const LOCATIONS = {
             hermann: {
                 name: "Hermann Park",
+                displayName: "Hermann Park",
                 centerPrompt: "Rice Student",
                 pool: [
-                    "Turtle",
-                    "Bird",
-                    "Squirrel",
-                    "Handstand",
-                    "Someone with Hat",
-                    "Fountain",
-                    "Miller Theatre",
-                    "Reflecting Pool",
-                    "Japanese Garden",
-                    "Koi Fish",
-                    "Sam Houston Statue",
-                    "Pedal Boat",
-                    "Picnic Blanket",
-                    "Family with Stroller",
-                    "Couple on a Bench",
-                    "Dog on a Leash",
-                    "High Five with a Stranger",
-                    "Group Jumping Photo",
-                    "Shadow Selfie",
-                    "Sign: 'Hermann'",
-                    "Flower Close-up",
-                    "Statue Close-up",
-                    "In a Tunnel",
-                    "Twisty Tree",
-                    "Science Museum",
-                    "Pinecone or Leaf",
-                    "Bike or Scooter",
-                    "Train Passing By",
-                    "Selfie with a Friend",
-                    "Kids Playing",
-                    "Jogger or Runner",
-                    "Person Reading",
-                    "Person on a Bench with Headphones",
-                    "Person Walking a Pet",
-                    "People Playing a Game",
-                    "Person Wearing Green",
-                    "Person Taking a Photo"
+                    "Turtle", "Bird", "Squirrel", "Handstand", "Someone with Hat", 
+                    "Fountain", "Miller Theatre", "Reflecting Pool", "Japanese Garden", "Koi Fish",
+                    "Sam Houston Statue", "Pedal Boat", "Picnic Blanket", "Family with Stroller",
+                    "Couple on a Bench", "Dog on a Leash", "High Five w/ Stranger", "Group Jump Photo",
+                    "Shadow Selfie", "Sign: 'Hermann'", "Flower Close-up", "Statue Close-up",
+                    "In a Tunnel", "Twisty Tree", "Science Museum", "Pinecone or Leaf",
+                    "Bike or Scooter", "Train Passing By", "Selfie with Friend", "Kids Playing",
+                    "Jogger/Runner", "Person Reading", "Person w/ Headphones", "Person Walking Pet",
+                    "People Playing Game", "Person Wearing Green", "Person Taking Photo"
                 ]
             },
             venice: {
                 name: "Venice Beach",
-                centerPrompt: "Venice Beach Sign",
+                displayName: "Venice Beach",
+                centerPrompt: "Venice Sign",
                 pool: [
-                    "Selfie w/ Lifeguard",
-                    "Surfer Catching a Wave",
-                    "Skate Park Trick",
-                    "Beach Volleyball Game (join in!)",
-                    "Palm Trees",
-                    "Bikes on the Boardwalk",
-                    "Muscle Beach Workout",
-                    "Selfie w/ Street Performer",
-                    "Graffiti Wall",
-                    "Dog on the Beach",
-                    "Sunset Over the Ocean",
-                    "Sandcastle",
-                    "Couple Taking a Selfie",
-                    "Roller Skater",
-                    "Person with Surfboard",
-                    "Food Truck or Snack Stand",
-                    "Street Vendor",
-                    "Artist Painting or Drawing",
-                    "Skateboarder on the Path",
-                    "Person Wearing Sunglasses",
-                    "Group Jumping Photo",
-                    "High Five with a Stranger",
-                    "Shadow Selfie in the Sand",
-                    "Beach Umbrella",
-                    "Kite in the Sky",
-                    "Birds Flying Over Water",
-                    "Lifeguard Truck",
-                    "People Playing with a Frisbee",
-                    "Jogger on the Path",
-                    "Friend Group Sitting in a Circle",
-                    "Person Listening to Music",
-                    "Surfboards Lined Up",
-                    "Colorful Storefront",
-                    "Street Mural Close-up",
-                    "Bare Feet in the Sand",
-                    "Wave Splash Close-up",
-                    "Person in a Hat"
+                    "Selfie w/ Lifeguard", "Surfer Catching Wave", "Skate Park Trick", "Beach Volleyball",
+                    "Palm Trees", "Bikes on Boardwalk", "Muscle Beach Workout", "Street Performer",
+                    "Graffiti Wall", "Dog on Beach", "Sunset Over Ocean", "Sandcastle",
+                    "Couple Selfie", "Roller Skater", "Person w/ Surfboard", "Food Truck",
+                    "Street Vendor", "Artist Painting", "Skateboarder", "Sunglasses",
+                    "Group Jump Photo", "High Five w/ Stranger", "Shadow Selfie", "Beach Umbrella",
+                    "Kite in Sky", "Birds Over Water", "Lifeguard Truck", "Playing Frisbee",
+                    "Jogger on Path", "Friend Circle", "Listening to Music", "Surfboards Lined Up",
+                    "Colorful Storefront", "Mural Close-up", "Bare Feet in Sand", "Wave Splash", "Person in Hat"
                 ]
             },
             panpacific: {
                 name: "Pan-Pacific Park",
-                centerPrompt: "Pan-Pacific Fountain",
+                displayName: "Pan-Pacific Park",
+                centerPrompt: "Park Fountain",
                 pool: [
-                    "Playground",
-                    "Basketball Court",
-                    "Soccer Game",
-                    "Dogs Playing",
-                    "Picnic Table",
-                    "View of The Grove",
-                    "Jogger on the Path",
-                    "Palm Tree Row",
-                    "Park Fountain",
-                    "Children Playing",
-                    "Skateboarder",
-                    "Person Walking a Dog",
-                    "Family on a Picnic Blanket",
-                    "Person Reading on a Bench",
-                    "Bike or Scooter",
-                    "Person Doing Stretching",
-                    "Outdoor Workout",
-                    "High Five with a Stranger",
-                    "Group Jumping Photo",
-                    "Shadow Selfie on the Grass",
-                    "Park Sign or Map",
-                    "Flower Bed",
-                    "Bird or Squirrel",
-                    "Person Wearing a Sports Jersey",
-                    "People Playing Catch",
-                    "Stroller or Baby Carriage",
-                    "Water Bottle Close-up",
-                    "Park Bench Line-up",
-                    "Sunset or Golden Hour Light",
-                    "Friend Group Walking Together",
-                    "Person on Their Phone",
-                    "Park Pathway Curve",
-                    "Palm Trees Against the Sky",
-                    "Kids on the Playground",
-                    "Person in a Hat",
-                    "Park Trash or Recycling Can",
-                    "View Toward the City"
+                    "Playground", "Basketball Court", "Soccer Game", "Dogs Playing", "Picnic Table",
+                    "View of The Grove", "Jogger on Path", "Palm Tree Row", "Park Fountain", "Children Playing",
+                    "Skateboarder", "Person Walking Dog", "Family Picnic", "Reading on Bench", "Bike or Scooter",
+                    "Stretching", "Outdoor Workout", "High Five w/ Stranger", "Group Jump", "Shadow Selfie",
+                    "Park Sign/Map", "Flower Bed", "Bird or Squirrel", "Sports Jersey", "Playing Catch",
+                    "Stroller", "Water Bottle", "Bench Line-up", "Golden Hour Light", "Friends Walking",
+                    "Person on Phone", "Pathway Curve", "Trees Against Sky", "Playground Kids",
+                    "Person in Hat", "Trash/Recycle Can", "View Toward City"
                 ]
             }
         };
@@ -251,7 +198,7 @@
         let boardPrompts = new Array(25).fill("");
 
         // --- DOM ELEMENTS ---
-        let boardEl, fileInput, modal, statusEl, locationSelect, locationLabel;
+        let boardEl, fileInput, modal, statusEl, locationSelect;
 
         // --- UTILITIES ---
         function getCurrentLocationConfig() {
@@ -260,6 +207,13 @@
 
         function getPromptStorageKey() {
             return `${PROMPT_STORAGE_BASE_KEY}-${currentLocationKey}`;
+        }
+
+        function showStatus(msg) {
+            if(!statusEl) return;
+            statusEl.innerText = msg;
+            statusEl.style.opacity = '1';
+            setTimeout(() => { statusEl.style.opacity = '0'; }, 3000);
         }
 
         function shuffleArray(array) {
@@ -299,87 +253,57 @@
                         return;
                     }
                 }
-            } catch (e) {
-                console.error("Error loading prompts from storage", e);
-            }
+            } catch (e) { console.error(e); }
             boardPrompts = buildNewBoardPrompts();
-            try {
-                localStorage.setItem(storageKey, JSON.stringify(boardPrompts));
-            } catch (e) {
-                console.error("Error saving prompts to storage", e);
-            }
+            localStorage.setItem(storageKey, JSON.stringify(boardPrompts));
         }
 
         function regenerateBoardPrompts() {
             const storageKey = getPromptStorageKey();
-            try {
-                localStorage.removeItem(storageKey);
-            } catch (e) {
-                console.error("Error clearing prompts from storage", e);
-            }
+            localStorage.removeItem(storageKey);
             boardPrompts = buildNewBoardPrompts();
-            try {
-                localStorage.setItem(storageKey, JSON.stringify(boardPrompts));
-            } catch (e) {
-                console.error("Error saving prompts to storage", e);
-            }
+            localStorage.setItem(storageKey, JSON.stringify(boardPrompts));
         }
 
         function updateLocationUI() {
             const config = getCurrentLocationConfig();
-            if (locationLabel) {
-                locationLabel.textContent = config.name + (currentLocationKey === 'hermann' ? " (Houston)" :
-                    currentLocationKey === 'venice' ? " (LA)" : " (LA)");
-            }
             document.title = `${config.name} Bingo`;
-            const exportTitle = document.getElementById('export-location-name');
-            if (exportTitle) exportTitle.textContent = config.name;
         }
 
-        // --- INDEXED DB SETUP (PERSISTENCE) ---
+        // --- INDEXED DB (IMAGES) ---
         function initDB() {
             const request = indexedDB.open(DB_NAME, DB_VERSION);
-            
             request.onupgradeneeded = (e) => {
                 db = e.target.result;
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
                     db.createObjectStore(STORE_NAME);
                 }
             };
-
             request.onsuccess = (e) => {
                 db = e.target.result;
                 loadGame();
             };
-
-            request.onerror = (e) => {
-                console.error("DB Error", e);
-                if (statusEl) statusEl.innerText = "Error loading save data.";
-            };
+            request.onerror = (e) => showStatus("Error loading database.");
         }
 
         function savePhotoToDB(index, base64Data) {
             if (!db) return;
             const tx = db.transaction(STORE_NAME, 'readwrite');
-            const store = tx.objectStore(STORE_NAME);
-            store.put(base64Data, index);
-            if (statusEl) statusEl.innerText = "Game saved automatically.";
+            tx.objectStore(STORE_NAME).put(base64Data, index);
+            showStatus("Photo saved.");
         }
 
         function deletePhotoFromDB(index) {
             if (!db) return;
             const tx = db.transaction(STORE_NAME, 'readwrite');
-            const store = tx.objectStore(STORE_NAME);
-            store.delete(index);
-            if (statusEl) statusEl.innerText = "Photo removed.";
+            tx.objectStore(STORE_NAME).delete(index);
+            showStatus("Photo cleared.");
         }
 
         function loadGame() {
             if (!db) return;
             const tx = db.transaction(STORE_NAME, 'readonly');
-            const store = tx.objectStore(STORE_NAME);
-            
-            const request = store.openCursor();
+            const request = tx.objectStore(STORE_NAME).openCursor();
             request.onsuccess = (e) => {
                 const cursor = e.target.result;
                 if (cursor) {
@@ -388,8 +312,6 @@
                     photoState[index] = data;
                     updateSquareVisuals(index, data);
                     cursor.continue();
-                } else {
-                    if (statusEl) statusEl.innerText = "Ready to play!";
                 }
             };
         }
@@ -397,33 +319,32 @@
         function clearDB() {
             if (!db) return;
             const tx = db.transaction(STORE_NAME, 'readwrite');
-            const store = tx.objectStore(STORE_NAME);
-            store.clear();
-            if (statusEl) statusEl.innerText = "Board reset.";
+            tx.objectStore(STORE_NAME).clear();
         }
 
-        // --- BOARD LOGIC ---
+        // --- BOARD RENDERING ---
         function initBoard() {
             boardEl.innerHTML = '';
             boardPrompts.forEach((prompt, index) => {
                 const square = document.createElement('div');
                 square.id = `square-${index}`;
                 
-                let baseClasses = "relative w-full pt-[100%] rounded-md overflow-hidden cursor-pointer shadow-sm transition-transform active:scale-95 ";
-                baseClasses += index === CENTER_INDEX ? "bg-emerald-700" : "bg-slate-700";
+                let baseClasses = "relative w-full pt-[100%] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 active:scale-95 hover:brightness-110 ";
+                // Center square distinct style
+                baseClasses += index === CENTER_INDEX ? "bg-gradient-to-br from-emerald-700 to-emerald-900 shadow-inner" : "bg-slate-800 shadow-sm";
                 
                 square.className = baseClasses;
                 square.onclick = () => handleSquareClick(index);
 
                 square.innerHTML = `
-                    <div class="absolute inset-0 flex items-center justify-center p-1 z-10 pointer-events-none">
-                        <span class="prompt-text text-[9px] sm:text-xs font-bold text-center leading-tight break-words text-white">${prompt}</span>
+                    <div class="absolute inset-0 flex items-center justify-center p-1.5 z-10 pointer-events-none">
+                        <span class="prompt-text text-[10px] sm:text-xs font-semibold text-center leading-tight break-words text-slate-200/90">${prompt}</span>
                     </div>
-                    <div class="absolute inset-0 bg-cover bg-center z-0 hidden" id="img-${index}"></div>
-                    <div class="absolute inset-0 bg-black/40 z-0 hidden" id="overlay-${index}"></div>
-                    <div id="loading-${index}" class="hidden absolute inset-0 flex items-center justify-center bg-slate-800/80 z-20"><div class="loader"></div></div>
-                    <div id="check-${index}" class="hidden absolute top-1 right-1 z-20 bg-green-500 rounded-full p-0.5 shadow-sm">
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>
+                    <div class="absolute inset-0 bg-cover bg-center z-0 hidden transition-opacity duration-500" id="img-${index}"></div>
+                    <div class="absolute inset-0 bg-black/20 z-0 hidden" id="overlay-${index}"></div>
+                    <div id="loading-${index}" class="hidden absolute inset-0 flex items-center justify-center bg-slate-900/80 z-20 backdrop-blur-sm"><div class="loader"></div></div>
+                    <div id="check-${index}" class="hidden absolute top-1.5 right-1.5 z-20 bg-emerald-500 text-white rounded-full p-0.5 shadow-md transform scale-0 transition-transform duration-300">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
                     </div>
                 `;
                 boardEl.appendChild(square);
@@ -438,8 +359,7 @@
             activeIndex = index;
             fileInput.setAttribute('data-index', index.toString());
             if (photoState[index]) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
+                openModal();
             } else {
                 triggerFileUpload();
             }
@@ -450,19 +370,16 @@
             fileInput.click();
         }
 
-        // --- IMAGE PROCESSING ---
+        // --- IMAGE HANDLING ---
         function setupFileInputListener() {
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files && e.target.files[0];
-                const idxAttr = fileInput.getAttribute('data-index');
-                const indexFromAttr = idxAttr !== null ? parseInt(idxAttr, 10) : null;
-                const indexToUse = (activeIndex !== null) ? activeIndex : indexFromAttr;
+                const indexToUse = (activeIndex !== null) ? activeIndex : parseInt(fileInput.getAttribute('data-index'), 10);
 
-                if (!file || indexToUse === null || isNaN(indexToUse)) return;
+                if (!file || isNaN(indexToUse)) return;
 
                 const loadingEl = document.getElementById(`loading-${indexToUse}`);
                 if (loadingEl) loadingEl.classList.remove('hidden');
-                if (statusEl) statusEl.innerText = "Compressing photo...";
 
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -470,8 +387,7 @@
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        
-                        const MAX_SIZE = 1200;
+                        const MAX_SIZE = 1000; 
                         let width = img.width;
                         let height = img.height;
 
@@ -485,16 +401,12 @@
                         canvas.height = height;
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8); // Compress
                         
                         photoState[indexToUse] = dataUrl;
                         savePhotoToDB(indexToUse, dataUrl);
                         updateSquareVisuals(indexToUse, dataUrl);
                         
-                        if (loadingEl) loadingEl.classList.add('hidden');
-                    };
-                    img.onerror = () => {
-                        alert("Could not load image.");
                         if (loadingEl) loadingEl.classList.add('hidden');
                     };
                     img.src = event.target.result;
@@ -517,45 +429,65 @@
                 imgDiv.classList.remove('hidden');
             }
             if (overlay) overlay.classList.remove('hidden');
-            if (check) check.classList.remove('hidden');
+            if (check) {
+                check.classList.remove('hidden');
+                // Tiny timeout to trigger CSS transition for pop effect
+                setTimeout(() => check.classList.remove('scale-0'), 50);
+            }
             if (text) text.classList.add('opacity-0');
             
-            square.classList.remove('bg-slate-700', 'bg-emerald-700');
-            square.classList.add('border-2', 'border-green-500');
+            square.classList.remove('bg-slate-800', 'bg-emerald-700');
+            square.classList.add('ring-2', 'ring-emerald-500', 'ring-offset-2', 'ring-offset-slate-900');
         }
 
-        // --- MODAL & RESET ---
-        function setupModalButtons() {
-            const btnChange = document.getElementById('btn-change');
-            const btnDelete = document.getElementById('btn-delete');
+        // --- MODAL LOGIC ---
+        function openModal() {
+            modal.classList.remove('hidden');
+            // Trigger reflow
+            void modal.offsetWidth; 
+            modal.classList.remove('opacity-0', 'scale-95');
+            modal.classList.add('flex', 'opacity-100', 'scale-100');
+        }
 
-            btnChange.onclick = () => {
+        function closeModal() {
+            modal.classList.remove('opacity-100', 'scale-100');
+            modal.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 200);
+        }
+
+        function setupModalButtons() {
+            document.getElementById('btn-change').onclick = () => {
                 closeModal();
-                setTimeout(triggerFileUpload, 50);
+                setTimeout(triggerFileUpload, 250);
             };
 
-            btnDelete.onclick = () => {
+            document.getElementById('btn-delete').onclick = () => {
                 const index = activeIndex;
-                if (index === null) {
-                    closeModal();
-                    return;
-                }
+                if (index === null) return closeModal();
+                
                 photoState[index] = null;
                 deletePhotoFromDB(index);
                 
+                // Reset Visuals
                 const square = document.getElementById(`square-${index}`);
                 const imgDiv = document.getElementById(`img-${index}`);
                 const overlay = document.getElementById(`overlay-${index}`);
                 const check = document.getElementById(`check-${index}`);
+                const text = square.querySelector('.prompt-text');
 
                 if (imgDiv) imgDiv.classList.add('hidden');
                 if (overlay) overlay.classList.add('hidden');
-                if (check) check.classList.add('hidden');
+                if (check) {
+                    check.classList.add('scale-0');
+                    setTimeout(() => check.classList.add('hidden'), 200);
+                }
+                if (text) text.classList.remove('opacity-0');
                 if (square) {
-                    const text = square.querySelector('.prompt-text');
-                    if (text) text.classList.remove('opacity-0');
-                    square.classList.remove('border-2', 'border-green-500');
-                    square.classList.add(index === CENTER_INDEX ? 'bg-emerald-700' : 'bg-slate-700');
+                    square.classList.remove('ring-2', 'ring-emerald-500', 'ring-offset-2', 'ring-offset-slate-900');
+                    square.classList.add(index === CENTER_INDEX ? 'bg-emerald-700' : 'bg-slate-800');
                 }
                 
                 closeModal();
@@ -564,43 +496,22 @@
             modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
         }
 
-        function closeModal() {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
         function resetBoard() {
-            if (confirm("Clear entire board and prompts for this location? All photos will be lost.")) {
+            if (confirm("Start a new game? This will clear all photos and shuffle prompts.")) {
                 photoState = new Array(25).fill(null);
                 clearDB();
                 regenerateBoardPrompts();
                 initBoard();
+                showStatus("Board reset!");
             }
         }
 
-        // --- LOCATION SWITCHING ---
-        function setupLocationSelector() {
-            locationSelect.addEventListener('change', (e) => {
-                currentLocationKey = e.target.value;
-                if (statusEl) statusEl.innerText = "Switching location...";
-                updateLocationUI();
-
-                // New board for new location, clear photos
-                photoState = new Array(25).fill(null);
-                clearDB();
-                loadOrCreateBoardPrompts();
-                initBoard();
-
-                if (statusEl) statusEl.innerText = "New board ready!";
-            });
-        }
-
-        // --- EXPORT ---
+        // --- EXPORT LOGIC ---
         async function exportGrid() {
             const btn = document.getElementById('export-btn');
-            const originalContent = btn.innerHTML;
+            const originalHTML = btn.innerHTML;
             
-            btn.innerHTML = `<div class="loader w-4 h-4 border-2 border-white/50 border-t-white"></div> Saving...`;
+            btn.innerHTML = `<div class="loader"></div>`;
             btn.disabled = true;
 
             try {
@@ -608,67 +519,75 @@
                 exportContainer.innerHTML = '';
                 document.getElementById('export-date').innerText = new Date().toLocaleDateString();
 
+                // DYNAMICALLY UPDATE EXPORT TEMPLATE TITLE
                 const locConfig = getCurrentLocationConfig();
                 const exportTitle = document.getElementById('export-location-name');
-                if (exportTitle) exportTitle.textContent = locConfig.name;
+                exportTitle.textContent = locConfig.name;
 
                 boardPrompts.forEach((prompt, index) => {
                     const div = document.createElement('div');
-                    div.className = "aspect-square bg-slate-200 flex items-center justify-center relative border border-slate-300 overflow-hidden";
+                    div.className = "aspect-square bg-slate-200 flex items-center justify-center relative border-2 border-slate-300 overflow-hidden rounded-lg";
                     
                     if (photoState[index]) {
                         div.innerHTML = `
                             <div class="absolute inset-0 bg-cover bg-center" style="background-image: url(${photoState[index]})"></div>
-                            <div class="absolute bottom-0 left-0 right-0 bg-black/70 p-1">
-                                <p class="text-white text-[10px] font-bold text-center leading-none truncate font-sans">${prompt}</p>
+                            <div class="absolute bottom-0 left-0 right-0 bg-slate-900/80 p-1.5">
+                                <p class="text-white text-[12px] font-bold text-center leading-none truncate font-sans">${prompt}</p>
                             </div>
                         `;
+                        div.style.borderColor = "#10b981"; // Green border for filled
                     } else {
-                         div.innerHTML = `<p class="text-slate-400 text-[10px] text-center font-bold p-1 leading-tight font-sans uppercase tracking-wide">${prompt}</p>`;
+                         div.innerHTML = `<div class="p-2"><p class="text-slate-400 text-[12px] text-center font-bold leading-tight uppercase tracking-wide">${prompt}</p></div>`;
                     }
                     exportContainer.appendChild(div);
                 });
 
-                await new Promise(r => setTimeout(r, 100));
+                await new Promise(r => setTimeout(r, 100)); // Wait for DOM
+                
                 const canvas = await html2canvas(document.getElementById('export-container'), {
-                    scale: 3,
+                    scale: 2, // High quality
                     useCORS: true,
                     backgroundColor: "#ffffff"
                 });
 
-                const locConfig2 = getCurrentLocationConfig();
-                const safeName = locConfig2.name.replace(/\s+/g, '-');
+                const safeName = locConfig.name.replace(/\s+/g, '-');
                 const link = document.createElement('a');
-                link.download = `${safeName}-Hunt-${new Date().toISOString().slice(0,10)}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.download = `${safeName}-Bingo-${new Date().toISOString().slice(0,10)}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.90);
                 link.click();
 
             } catch (e) {
                 console.error(e);
-                alert("Export failed. Try reloading.");
+                alert("Could not save image. Try again.");
             } finally {
-                btn.innerHTML = originalContent;
+                btn.innerHTML = originalHTML;
                 btn.disabled = false;
             }
         }
 
-        // --- STARTUP ---
+        // --- INIT ---
         window.addEventListener('DOMContentLoaded', () => {
             boardEl = document.getElementById('game-board');
             fileInput = document.getElementById('global-file-input');
             modal = document.getElementById('edit-modal');
             statusEl = document.getElementById('status-indicator');
             locationSelect = document.getElementById('location-select');
-            locationLabel = document.getElementById('location-label');
 
-            // Initial UI setup
+            locationSelect.addEventListener('change', (e) => {
+                currentLocationKey = e.target.value;
+                updateLocationUI();
+                photoState = new Array(25).fill(null);
+                clearDB();
+                loadOrCreateBoardPrompts();
+                initBoard();
+                showStatus("Location switched!");
+            });
+
             locationSelect.value = currentLocationKey;
             updateLocationUI();
-
             loadOrCreateBoardPrompts();
             setupFileInputListener();
             setupModalButtons();
-            setupLocationSelector();
             initBoard();
             initDB();
         });
