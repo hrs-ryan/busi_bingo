@@ -29,11 +29,22 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center overflow-x-hidden">
 
-    <!-- Compact Mobile Header -->
+    <!-- Header with location selector -->
     <header class="w-full text-center py-3 bg-slate-800 shadow-md z-10 sticky top-0">
-        <h1 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 inline-block">
-            Hermann Park Bingo
+        <h1 id="app-title" class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 inline-block">
+            Photo Bingo
         </h1>
+        <div class="mt-1 flex items-center justify-center gap-2 text-[11px]">
+            <span class="text-gray-300 uppercase tracking-wide font-semibold">Location:</span>
+            <select id="location-select" class="bg-slate-900/70 border border-slate-600 text-xs text-gray-100 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-green-400">
+                <option value="hermann">Hermann Park (Houston)</option>
+                <option value="venice">Venice Beach (LA)</option>
+                <option value="panpacific">Pan-Pacific Park (LA)</option>
+            </select>
+        </div>
+        <div id="location-label" class="text-[11px] text-green-300 mt-0.5 font-semibold tracking-wide uppercase">
+            Hermann Park (Houston)
+        </div>
         <div id="status-indicator" class="text-[10px] text-gray-400 mt-1 h-4">Loading saved game...</div>
     </header>
 
@@ -79,8 +90,10 @@
     <div style="position: absolute; left: -9999px; top: 0;">
         <div id="export-container" class="bg-white p-6 w-[1200px]">
             <div class="mb-4 text-center border-b-4 border-green-500 pb-4">
-                <h1 class="text-5xl font-black text-slate-800 tracking-tighter uppercase">Hermann Park</h1>
-                <p class="text-slate-500 text-xl font-bold mt-2 tracking-widest uppercase">Scavenger Hunt • <span id="export-date"></span></p>
+                <h1 id="export-location-name" class="text-5xl font-black text-slate-800 tracking-tighter uppercase">Hermann Park</h1>
+                <p class="text-slate-500 text-xl font-bold mt-2 tracking-widest uppercase">
+                    Scavenger Hunt • <span id="export-date"></span>
+                </p>
             </div>
             <div id="export-grid" class="grid grid-cols-5 gap-2 bg-slate-100 p-2 border-4 border-slate-800">
                 <!-- Export content -->
@@ -93,61 +106,162 @@
         const DB_NAME = 'HermannBingoDB';
         const DB_VERSION = 1;
         const STORE_NAME = 'photos';
-        const PROMPT_STORAGE_KEY = 'hermann-bingo-prompts-v2';
-        const CENTER_INDEX = 12;
-        const CENTER_PROMPT = 'Rice Student';
 
-        // Larger prompt pool (excluding fixed center tile when drawing)
-        const PROMPT_POOL = [
-            "Turtle",
-            "Bird",
-            "Squirrel",
-            "Handstand",
-            "Someone with Hat",
-            "Fountain",
-            "Miller Theatre",
-            "Reflecting Pool",
-            "Japanese Garden",
-            "Koi Fish",
-            "Sam Houston Statue",
-            "Pedal Boat",
-            "Picnic Blanket",
-            "Family with Stroller",
-            "Couple on a Bench",
-            "Dog on a Leash",
-            "High Five with a Stranger",
-            "Group Jumping Photo",
-            "Shadow Selfie",
-            "Sign: 'Hermann'",
-            "Flower Close-up",
-            "Statue Close-up",
-            "In a Tunnel",
-            "Twisty Tree",
-            "Science Museum",
-            "Pinecone or Leaf",
-            "Bike or Scooter",
-            "Train Passing By",
-            "Selfie with a Friend",
-            "Kids Playing",
-            "Jogger or Runner",
-            "Person Reading",
-            "Person on a Bench with Headphones",
-            "Person Walking a Pet",
-            "People Playing a Game",
-            "Person Wearing Green",
-            "Person Taking a Photo"
-        ];
+        const CENTER_INDEX = 12;
+        const PROMPT_STORAGE_BASE_KEY = 'hermann-bingo-prompts-v2';
+
+        // Location-specific prompt pools and center tiles
+        const LOCATIONS = {
+            hermann: {
+                name: "Hermann Park",
+                centerPrompt: "Rice Student",
+                pool: [
+                    "Turtle",
+                    "Bird",
+                    "Squirrel",
+                    "Handstand",
+                    "Someone with Hat",
+                    "Fountain",
+                    "Miller Theatre",
+                    "Reflecting Pool",
+                    "Japanese Garden",
+                    "Koi Fish",
+                    "Sam Houston Statue",
+                    "Pedal Boat",
+                    "Picnic Blanket",
+                    "Family with Stroller",
+                    "Couple on a Bench",
+                    "Dog on a Leash",
+                    "High Five with a Stranger",
+                    "Group Jumping Photo",
+                    "Shadow Selfie",
+                    "Sign: 'Hermann'",
+                    "Flower Close-up",
+                    "Statue Close-up",
+                    "In a Tunnel",
+                    "Twisty Tree",
+                    "Science Museum",
+                    "Pinecone or Leaf",
+                    "Bike or Scooter",
+                    "Train Passing By",
+                    "Selfie with a Friend",
+                    "Kids Playing",
+                    "Jogger or Runner",
+                    "Person Reading",
+                    "Person on a Bench with Headphones",
+                    "Person Walking a Pet",
+                    "People Playing a Game",
+                    "Person Wearing Green",
+                    "Person Taking a Photo"
+                ]
+            },
+            venice: {
+                name: "Venice Beach",
+                centerPrompt: "Venice Beach Sign",
+                pool: [
+                    "Lifeguard Tower",
+                    "Surfer Catching a Wave",
+                    "Skate Park Trick",
+                    "Beach Volleyball Game",
+                    "Palm Trees",
+                    "Bikes on the Boardwalk",
+                    "Muscle Beach Workout",
+                    "Street Performer",
+                    "Graffiti Wall",
+                    "Dog on the Beach",
+                    "Sunset Over the Ocean",
+                    "Sandcastle",
+                    "Couple Taking a Selfie",
+                    "Roller Skater",
+                    "Person with Surfboard",
+                    "Food Truck or Snack Stand",
+                    "Street Vendor",
+                    "Artist Painting or Drawing",
+                    "Skateboarder on the Path",
+                    "Person Wearing Sunglasses",
+                    "Group Jumping Photo",
+                    "High Five with a Stranger",
+                    "Shadow Selfie in the Sand",
+                    "Beach Umbrella",
+                    "Kite in the Sky",
+                    "Birds Flying Over Water",
+                    "Lifeguard Truck",
+                    "People Playing with a Frisbee",
+                    "Jogger on the Path",
+                    "Friend Group Sitting in a Circle",
+                    "Person Listening to Music",
+                    "Surfboards Lined Up",
+                    "Colorful Storefront",
+                    "Street Mural Close-up",
+                    "Bare Feet in the Sand",
+                    "Wave Splash Close-up",
+                    "Person in a Hat"
+                ]
+            },
+            panpacific: {
+                name: "Pan-Pacific Park",
+                centerPrompt: "Pan-Pacific Fountain",
+                pool: [
+                    "Playground",
+                    "Basketball Court",
+                    "Soccer Game",
+                    "Dogs Playing",
+                    "Picnic Table",
+                    "View of The Grove",
+                    "Jogger on the Path",
+                    "Palm Tree Row",
+                    "Park Fountain",
+                    "Children Playing",
+                    "Skateboarder",
+                    "Person Walking a Dog",
+                    "Family on a Picnic Blanket",
+                    "Person Reading on a Bench",
+                    "Bike or Scooter",
+                    "Person Doing Stretching",
+                    "Outdoor Workout",
+                    "High Five with a Stranger",
+                    "Group Jumping Photo",
+                    "Shadow Selfie on the Grass",
+                    "Park Sign or Map",
+                    "Flower Bed",
+                    "Bird or Squirrel",
+                    "Person Wearing a Sports Jersey",
+                    "People Playing Catch",
+                    "Stroller or Baby Carriage",
+                    "Water Bottle Close-up",
+                    "Park Bench Line-up",
+                    "Sunset or Golden Hour Light",
+                    "Friend Group Walking Together",
+                    "Person on Their Phone",
+                    "Park Pathway Curve",
+                    "Palm Trees Against the Sky",
+                    "Kids on the Playground",
+                    "Person in a Hat",
+                    "Park Trash or Recycling Can",
+                    "View Toward the City"
+                ]
+            }
+        };
 
         // --- STATE ---
+        let currentLocationKey = 'hermann';
         let db = null;
         let photoState = new Array(25).fill(null);
         let activeIndex = null;
         let boardPrompts = new Array(25).fill("");
 
-        // --- DOM ELEMENTS (initialized on DOMContentLoaded) ---
-        let boardEl, fileInput, modal, statusEl;
+        // --- DOM ELEMENTS ---
+        let boardEl, fileInput, modal, statusEl, locationSelect, locationLabel;
 
         // --- UTILITIES ---
+        function getCurrentLocationConfig() {
+            return LOCATIONS[currentLocationKey];
+        }
+
+        function getPromptStorageKey() {
+            return `${PROMPT_STORAGE_BASE_KEY}-${currentLocationKey}`;
+        }
+
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -157,8 +271,8 @@
         }
 
         function buildNewBoardPrompts() {
-            const pool = PROMPT_POOL.slice();
-            const filteredPool = pool.filter(p => p !== CENTER_PROMPT);
+            const { centerPrompt, pool } = getCurrentLocationConfig();
+            const filteredPool = pool.filter(p => p !== centerPrompt);
             shuffleArray(filteredPool);
 
             const selected = filteredPool.slice(0, 24);
@@ -166,7 +280,7 @@
             let selIndex = 0;
             for (let i = 0; i < 25; i++) {
                 if (i === CENTER_INDEX) {
-                    result.push(CENTER_PROMPT);
+                    result.push(centerPrompt);
                 } else {
                     result.push(selected[selIndex++]);
                 }
@@ -175,8 +289,9 @@
         }
 
         function loadOrCreateBoardPrompts() {
+            const storageKey = getPromptStorageKey();
             try {
-                const saved = localStorage.getItem(PROMPT_STORAGE_KEY);
+                const saved = localStorage.getItem(storageKey);
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     if (Array.isArray(parsed) && parsed.length === 25) {
@@ -189,24 +304,36 @@
             }
             boardPrompts = buildNewBoardPrompts();
             try {
-                localStorage.setItem(PROMPT_STORAGE_KEY, JSON.stringify(boardPrompts));
+                localStorage.setItem(storageKey, JSON.stringify(boardPrompts));
             } catch (e) {
                 console.error("Error saving prompts to storage", e);
             }
         }
 
         function regenerateBoardPrompts() {
+            const storageKey = getPromptStorageKey();
             try {
-                localStorage.removeItem(PROMPT_STORAGE_KEY);
+                localStorage.removeItem(storageKey);
             } catch (e) {
                 console.error("Error clearing prompts from storage", e);
             }
             boardPrompts = buildNewBoardPrompts();
             try {
-                localStorage.setItem(PROMPT_STORAGE_KEY, JSON.stringify(boardPrompts));
+                localStorage.setItem(storageKey, JSON.stringify(boardPrompts));
             } catch (e) {
                 console.error("Error saving prompts to storage", e);
             }
+        }
+
+        function updateLocationUI() {
+            const config = getCurrentLocationConfig();
+            if (locationLabel) {
+                locationLabel.textContent = config.name + (currentLocationKey === 'hermann' ? " (Houston)" :
+                    currentLocationKey === 'venice' ? " (LA)" : " (LA)");
+            }
+            document.title = `${config.name} Bingo`;
+            const exportTitle = document.getElementById('export-location-name');
+            if (exportTitle) exportTitle.textContent = config.name;
         }
 
         // --- INDEXED DB SETUP (PERSISTENCE) ---
@@ -301,7 +428,6 @@
                 `;
                 boardEl.appendChild(square);
 
-                // If there is already a saved photo for this index, reapply visuals
                 if (photoState[index]) {
                     updateSquareVisuals(index, photoState[index]);
                 }
@@ -345,7 +471,6 @@
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
                         
-                        // Higher resolution while still compressing
                         const MAX_SIZE = 1200;
                         let width = img.width;
                         let height = img.height;
@@ -445,12 +570,29 @@
         }
 
         function resetBoard() {
-            if (confirm("Clear entire board and prompts? All photos will be lost.")) {
+            if (confirm("Clear entire board and prompts for this location? All photos will be lost.")) {
                 photoState = new Array(25).fill(null);
                 clearDB();
                 regenerateBoardPrompts();
                 initBoard();
             }
+        }
+
+        // --- LOCATION SWITCHING ---
+        function setupLocationSelector() {
+            locationSelect.addEventListener('change', (e) => {
+                currentLocationKey = e.target.value;
+                if (statusEl) statusEl.innerText = "Switching location...";
+                updateLocationUI();
+
+                // New board for new location, clear photos
+                photoState = new Array(25).fill(null);
+                clearDB();
+                loadOrCreateBoardPrompts();
+                initBoard();
+
+                if (statusEl) statusEl.innerText = "New board ready!";
+            });
         }
 
         // --- EXPORT ---
@@ -465,6 +607,10 @@
                 const exportContainer = document.getElementById('export-grid');
                 exportContainer.innerHTML = '';
                 document.getElementById('export-date').innerText = new Date().toLocaleDateString();
+
+                const locConfig = getCurrentLocationConfig();
+                const exportTitle = document.getElementById('export-location-name');
+                if (exportTitle) exportTitle.textContent = locConfig.name;
 
                 boardPrompts.forEach((prompt, index) => {
                     const div = document.createElement('div');
@@ -490,8 +636,10 @@
                     backgroundColor: "#ffffff"
                 });
 
+                const locConfig2 = getCurrentLocationConfig();
+                const safeName = locConfig2.name.replace(/\s+/g, '-');
                 const link = document.createElement('a');
-                link.download = `Hermann-Hunt-${new Date().toISOString().slice(0,10)}.jpg`;
+                link.download = `${safeName}-Hunt-${new Date().toISOString().slice(0,10)}.jpg`;
                 link.href = canvas.toDataURL('image/jpeg', 0.95);
                 link.click();
 
@@ -510,10 +658,17 @@
             fileInput = document.getElementById('global-file-input');
             modal = document.getElementById('edit-modal');
             statusEl = document.getElementById('status-indicator');
+            locationSelect = document.getElementById('location-select');
+            locationLabel = document.getElementById('location-label');
+
+            // Initial UI setup
+            locationSelect.value = currentLocationKey;
+            updateLocationUI();
 
             loadOrCreateBoardPrompts();
             setupFileInputListener();
             setupModalButtons();
+            setupLocationSelector();
             initBoard();
             initDB();
         });
